@@ -315,16 +315,15 @@
             }
           },
           {
-            "id": "sendazureiot_3",
-            "name": "sendazureiot",
-            "description": "Creates an activity to send a message to Azure IOT Hub",
+            "id": "log_3",
+            "name": "Display Success message",
+            "description": "Simple Log Activity",
             "activity": {
-              "ref": "github.com/pradyuz3rocool/flogo-workspace/activity/sendazureiot",
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
               "input": {
-                "Action": "Send",
-                "Device ID": "RaspberryPi",
-                "message": "hello",
-                "connectionString": "HostName=HomeAutoHub.azure-devices.net;DeviceId=raspi;SharedAccessKey=/Me+Jt/cNQ1ID4tDqW3/zg=="
+                "message": "Sucessfully registerd on Azure IOT Hub",
+                "flowInfo": false,
+                "addToFlow": false
               }
             }
           }
@@ -332,7 +331,7 @@
         "links": [
           {
             "from": "azureiot_2",
-            "to": "sendazureiot_3"
+            "to": "log_3"
           }
         ]
       }
