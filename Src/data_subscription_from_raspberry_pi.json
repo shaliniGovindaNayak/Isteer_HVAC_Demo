@@ -326,12 +326,26 @@
                 "addToFlow": false
               }
             }
+          },
+          {
+            "id": "subflow_4",
+            "name": "Data_subscription_Through_MQTT_Broker",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/subflow",
+              "settings": {
+                "flowURI": "res://flow:data_subscription_through_mqtt_broker"
+              }
+            }
           }
         ],
         "links": [
           {
             "from": "azureiot_2",
             "to": "log_3"
+          },
+          {
+            "from": "log_3",
+            "to": "subflow_4"
           }
         ]
       }
