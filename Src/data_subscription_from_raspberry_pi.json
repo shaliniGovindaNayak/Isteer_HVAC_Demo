@@ -40,9 +40,9 @@
       ]
     },
     {
-      "id": "timer",
+      "id": "trigger",
       "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/timer",
-      "name": "Timer",
+      "name": "Trigger",
       "description": "Simple Timer trigger",
       "settings": {},
       "handlers": [
@@ -303,7 +303,7 @@
         "tasks": [
           {
             "id": "azureiot_2",
-            "name": "azureiot",
+            "name": "Registering to Azure IOT hub",
             "description": "Performs CRUD operations of device management in Azure IOT Hub",
             "activity": {
               "ref": "github.com/pradyuz3rocool/flogo-workspace/activity/azureiot",
