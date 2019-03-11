@@ -1,0 +1,341 @@
+{
+  "name": "Data Subscription From  RaspberryPi",
+  "type": "flogo:app",
+  "version": "0.0.1",
+  "appModel": "1.0.0",
+  "triggers": [
+    {
+      "id": "subscribing_mqtt_message_from_raspberry_pi",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/mqtt",
+      "name": "Subscribing MQTT Message from Raspberry Pi",
+      "description": "Simple MQTT Trigger",
+      "settings": {
+        "broker": "tcp://192.168.1.90:1883",
+        "id": "flogo",
+        "user": "username",
+        "password": "password",
+        "store": "ds"
+      },
+      "handlers": [
+        {
+          "action": {
+            "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+            "data": {
+              "flowURI": "res://flow:data_subscription_through_mqtt_broker"
+            },
+            "mappings": {
+              "input": [
+                {
+                  "mapTo": "Subscribed_data",
+                  "type": "assign",
+                  "value": "$.message"
+                }
+              ]
+            }
+          },
+          "settings": {
+            "topic": "topic"
+          }
+        }
+      ]
+    },
+    {
+      "id": "timer",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/timer",
+      "name": "Timer",
+      "description": "Simple Timer trigger",
+      "settings": {},
+      "handlers": [
+        {
+          "action": {
+            "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+            "data": {
+              "flowURI": "res://flow:raspberyy_pi_registration_on_azure_iot_hub"
+            }
+          },
+          "settings": {
+            "repeating": "false",
+            "notImmediate": "true",
+            "startDate": "2018-01-01T12:00:00Z00:00"
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "flow:data_subscription_through_mqtt_broker",
+      "data": {
+        "name": "Data_subscription_Through_MQTT_Broker",
+        "metadata": {
+          "input": [
+            {
+              "name": "Subscribed_data",
+              "type": "string"
+            }
+          ]
+        },
+        "tasks": [
+          {
+            "id": "log_2",
+            "name": "Subscribed data Displayed ",
+            "description": "Simple Log Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+              "input": {
+                "flowInfo": false,
+                "addToFlow": false
+              },
+              "mappings": {
+                "input": [
+                  {
+                    "type": "assign",
+                    "value": "$flow.Subscribed_data",
+                    "mapTo": "message"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "stringtojson_3",
+            "name": "Conversion from String-type to Json",
+            "description": "activity description",
+            "activity": {
+              "ref": "github.com/shaliniGovindaNayak/flogo-workspace/activity/stringtojson",
+              "mappings": {
+                "input": [
+                  {
+                    "type": "assign",
+                    "value": "$flow.Subscribed_data",
+                    "mapTo": "Rawstring"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "sendazureiot_4",
+            "name": "Uploading From to Azure Iot hub",
+            "description": "Creates an activity to send a message to Azure IOT Hub",
+            "activity": {
+              "ref": "github.com/pradyuz3rocool/flogo-workspace/activity/sendazureiot",
+              "input": {
+                "Action": "Send",
+                "Device ID": "RaspberryPi",
+                "connectionString": "HostName=HomeAutoHub.azure-devices.net;DeviceId=RaspberryPi;SharedAccessKey=2lQ5zOZ+58nRgrqcRO9JkvkodoQDzBHCqGePSO2ZhwY="
+              },
+              "mappings": {
+                "input": [
+                  {
+                    "type": "object",
+                    "value": {
+                      "UserFormDataRequest": {
+                        "UserFormData": {
+                          "FormDataRequest": {
+                            "FormData": [
+                              {
+                                "FormViewID": 1360,
+                                "HeaderID": 2079,
+                                "FieldID": 5972,
+                                "FieldLabel": "Temperature",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_5].Json.temperature}}"
+                              },
+                              {
+                                "FormViewID": "1360",
+                                "HeaderID": 2079,
+                                "FieldID": 5973,
+                                "FieldLabel": " Humidity",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_5].Json.humidity}}"
+                              },
+                              {
+                                "FormViewID": "1360",
+                                "HeaderID": 2079,
+                                "FieldID": 5974,
+                                "FieldLabel": "Vibration",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_3].Json.vibration}}"
+                              }
+                            ]
+                          },
+                          "UserID": "pradyumna.chakicherla@gmail.com",
+                          "RecordID": "{{number.random(1000000000000000)}}",
+                          "ListDisplayFields": "",
+                          "FormID": 533,
+                          "Moment": " 2018-11-20T18:37:01.314695"
+                        }
+                      }
+                    },
+                    "mapTo": "message"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "log_6",
+            "name": "Displays if Success",
+            "description": "Simple Log Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+              "input": {
+                "flowInfo": false,
+                "addToFlow": false,
+                "message": "Sucessfully upladed the data on to Azure IOT Hub"
+              }
+            }
+          },
+          {
+            "id": "rest_7",
+            "name": "Invoke Front-man for Form creation",
+            "description": "Simple REST Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/rest",
+              "input": {
+                "skipSsl": false,
+                "uri": "https://beta.frontman.isteer.com:8091/services/KYC/SaveUserForm",
+                "method": "POST"
+              },
+              "mappings": {
+                "input": [
+                  {
+                    "type": "object",
+                    "value": {
+                      "UserFormDataRequest": {
+                        "UserFormData": {
+                          "FormDataRequest": {
+                            "FormData": [
+                              {
+                                "FormViewID": 1360,
+                                "HeaderID": 2079,
+                                "FieldID": 5972,
+                                "FieldLabel": "Temperature",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_5].Json.temperature}}"
+                              },
+                              {
+                                "FormViewID": "1360",
+                                "HeaderID": 2079,
+                                "FieldID": 5973,
+                                "FieldLabel": " Humidity",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_5].Json.humidity}}"
+                              },
+                              {
+                                "FormViewID": "1360",
+                                "HeaderID": 2079,
+                                "FieldID": 5974,
+                                "FieldLabel": "Vibration",
+                                "fieldType": "text",
+                                "FieldValue": "{{$activity[stringtojson_3].Json.vibration}}"
+                              }
+                            ]
+                          },
+                          "UserID": "pradyumna.chakicherla@gmail.com",
+                          "RecordID": "{{number.random(1000000000000000)}}",
+                          "ListDisplayFields": "",
+                          "FormID": 533,
+                          "Moment": " 2018-11-20T18:37:01.314695"
+                        }
+                      }
+                    },
+                    "mapTo": "content"
+                  },
+                  {
+                    "type": "object",
+                    "value": {
+                      "X_AUTH_TOKEN": "bb288427-6f82-4b63-9b46-2c04397f7e40",
+                      "Content-Type": "application/json"
+                    },
+                    "mapTo": "header"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "log_8",
+            "name": "Displays success message on Form creation",
+            "description": "Simple Log Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+              "input": {
+                "flowInfo": false,
+                "addToFlow": false
+              }
+            }
+          }
+        ],
+        "links": [
+          {
+            "from": "log_2",
+            "to": "stringtojson_3"
+          },
+          {
+            "from": "stringtojson_3",
+            "to": "sendazureiot_4",
+            "type": "expression",
+            "value": "true"
+          },
+          {
+            "from": "sendazureiot_4",
+            "to": "log_6"
+          },
+          {
+            "from": "stringtojson_3",
+            "to": "rest_7",
+            "type": "expression",
+            "value": "true"
+          },
+          {
+            "from": "rest_7",
+            "to": "log_8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flow:raspberyy_pi_registration_on_azure_iot_hub",
+      "data": {
+        "name": "RaspberyyPi Registration on Azure IOT Hub",
+        "tasks": [
+          {
+            "id": "azureiot_2",
+            "name": "azureiot",
+            "description": "Performs CRUD operations of device management in Azure IOT Hub",
+            "activity": {
+              "ref": "github.com/pradyuz3rocool/flogo-workspace/activity/azureiot",
+              "input": {
+                "Device ID": "RaspberryPi",
+                "Type of Operation": "Add Device",
+                "connectionString": "HostName=HomeAutoHub.azure-devices.net;SharedAccessKeyName=registryReadWrite;SharedAccessKey=D8YpcDikx/0B0iGUgA42z66OcDLohf2C72r/xSdINcw="
+              }
+            }
+          },
+          {
+            "id": "sendazureiot_3",
+            "name": "sendazureiot",
+            "description": "Creates an activity to send a message to Azure IOT Hub",
+            "activity": {
+              "ref": "github.com/pradyuz3rocool/flogo-workspace/activity/sendazureiot",
+              "input": {
+                "Action": "Send",
+                "Device ID": "RaspberryPi",
+                "message": "hello",
+                "connectionString": "HostName=HomeAutoHub.azure-devices.net;DeviceId=raspi;SharedAccessKey=/Me+Jt/cNQ1ID4tDqW3/zg=="
+              }
+            }
+          }
+        ],
+        "links": [
+          {
+            "from": "azureiot_2",
+            "to": "sendazureiot_3"
+          }
+        ]
+      }
+    }
+  ]
+}
